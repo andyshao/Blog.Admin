@@ -19,7 +19,7 @@
 ## 安装
 
 ```
- git clone git@github.com:anjoy8/Blog.Admin.git
+ git clone https://github.com/anjoy8/Blog.Admin.git
 ```
 安装包依赖
 ```
@@ -27,7 +27,7 @@ npm install
 ```
 
 ## 运行
-运行发开环境
+运行开发环境
 ```js
 npm run serve
 ```
