@@ -36,22 +36,29 @@ axios.interceptors.response.use(
                     // 返回 401 清除token信息并跳转到登录页面
                     store.commit("saveToken", "");
                     store.commit("saveTokenExpire", "");
+                    store.commit("saveTagsData", "");
+                    window.localStorage.removeItem('user');
+                    window.localStorage.removeItem('NavigationBar');
+
+
                     router.replace({
                         path: "/login",
                         query: {redirect: router.currentRoute.fullPath}
                     });
                 case 403:
                     Vue.prototype.$message({
-                        message: '无权限',
+                        message: '失败！该操作无权限',
                         type: 'error'
                     });
                     // 返回 403 无权限
-                    router.replace({
-                        path: "/403",
-                    });
+                    // router.replace({
+                    //     path: "/403",
+                    // });
+
+                    return null;
             }
         }
-        return Promise.reject(error.response.data); // 返回接口返回的错误信息
+        return ""; // 返回接口返回的错误信息
     }
 );
 
@@ -141,4 +148,27 @@ export const getPermissionIds = params => {
 
 export const addRolePermission = params => {
     return axios.post(`${base}/api/permission/Assign`, params);
+};
+export const getNavigationBar = params => {
+    return axios.get(`${base}/api/permission/GetNavigationBar`, {params: params}).then(res => res.data);
+};
+
+// Bug模块管理
+export const getBugListPage = params => {
+    return axios.get(`${base}/api/TopicDetail/get`, {params: params});
+};
+export const removeBug = params => {
+    return axios.delete(`${base}/api/TopicDetail/delete`, {params: params});
+};
+export const editBug = params => {
+    return axios.put(`${base}/api/TopicDetail/update`, params);
+};
+export const addBug = params => {
+    return axios.post(`${base}/api/TopicDetail/post`, params);
+};
+
+
+// 博客模块管理
+export const getBlogListPage = params => {
+    return axios.get(`${base}/api/Blog`, {params: params});
 };

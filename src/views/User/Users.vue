@@ -247,7 +247,11 @@
                     //NProgress.start();
                     let para = {id: row.uID};
                     removeUser(para).then((res) => {
-                        debugger
+
+                        if (util.isEmt.format(res)) {
+                            this.listLoading = false;
+                            return;
+                        }
                         this.listLoading = false;
                         //NProgress.done();
                         if (res.data.success) {
@@ -306,6 +310,10 @@
 
                             editUser(para).then((res) => {
 
+                                if (util.isEmt.format(res)) {
+                                    this.editLoading = false;
+                                    return;
+                                }
                                 if (res.data.success) {
                                     this.editLoading = false;
                                     //NProgress.done();
@@ -338,6 +346,12 @@
                             let para = Object.assign({}, this.addForm);
                             para.birth = (!para.birth || para.birth == '') ? util.formatDate.format(new Date(), 'yyyy-MM-dd') : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
                             addUser(para).then((res) => {
+
+                                if (util.isEmt.format(res)) {
+                                    this.addLoading = false;
+                                    return;
+                                }
+
                                 if (res.data.success) {
                                     this.addLoading = false;
                                     //NProgress.done();
@@ -368,6 +382,12 @@
             },
             //批量删除
             batchRemove: function () {
+                this.$message({
+                    message: '该功能未开放',
+                    type: 'warning'
+                });
+                return;
+
                 var ids = this.sels.map(item => item.id).toString();
                 this.$confirm('确认删除选中记录吗？', '提示', {
                     type: 'warning'

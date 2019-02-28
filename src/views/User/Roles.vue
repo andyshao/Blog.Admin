@@ -194,7 +194,10 @@
                     //NProgress.start();
                     let para = {id: row.Id};
                     removeRole(para).then((res) => {
-
+                        if (util.isEmt.format(res)) {
+                            this.listLoading = false;
+                            return;
+                        }
                         this.listLoading = false;
                         //NProgress.done();
                         if (res.data.success) {
@@ -243,6 +246,11 @@
 
                             editRole(para).then((res) => {
 
+                                if (util.isEmt.format(res)) {
+                                    this.editLoading = false;
+                                    return;
+                                }
+
                                 if (res.data.success) {
                                     this.editLoading = false;
                                     //NProgress.done();
@@ -289,9 +297,12 @@
                                 _this.$router.replace(_this.$route.query.redirect ? _this.$route.query.redirect : "/");
                             }
 
-
                             addRole(para).then((res) => {
 
+                                if (util.isEmt.format(res)) {
+                                    this.addLoading = false;
+                                    return;
+                                }
                                 if (res.data.success) {
                                     this.addLoading = false;
                                     //NProgress.done();
