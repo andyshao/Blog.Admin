@@ -37,49 +37,23 @@
                     </el-col>
                 </el-col>
                 <el-col :span="24" class="main">
-                    <aside :class="collapsed?'menu-collapsed':'menu-expanded'">
 
+
+                    <aside :class="collapsed?'menu-collapsed':'menu-expanded'">
+                        <el-scrollbar style="height:100%;background: #2f3e52;">
                         <el-menu  :default-active="$route.path"
                                  class="el-menu-vertical-demo" @open="handleopen" @close="handleclose" @select="handleselect"
                                  unique-opened router :collapse="isCollapse"
                                  background-color="#2f3e52"
                                  text-color="#fff"
                                  active-text-color="#ffd04b">
-                            <template v-for="(item,index) in routes" v-if="!item.hidden">
-
-                                <template v-if="item.children">
-
-
-                                    <el-submenu :index="index+''" v-if="!item.leaf">
-                                        <template slot="title">
-                                            <i class="fa" :class="item.iconCls"></i>
-                                            <span class="title-name" slot="title">{{item.name}}</span>
-                                        </template>
-                                        <el-menu-item class="title-name"  v-for="child in item.children" :index="child.path" :key="child.id" :base-path="item.path"
-                                                      v-if="!child.hidden">{{child.name}}
-                                        </el-menu-item>
-                                    </el-submenu>
-                                    <el-menu-item v-if="item.leaf&&item.children.length>0" :index="item.children[0].path"><i
-                                            :class="item.iconCls"></i>{{item.children[0].name}}
-                                    </el-menu-item>
-                                </template>
-                                <template v-else>
-
-                                    <el-menu-item :index="item.path">
-                                        <i class="fa" :class="item.iconCls"></i>
-                                        <template slot="title">
-                                            <span class="title-name" slot="title">{{item.name}}</span>
-                                        </template>
-
-                                    </el-menu-item>
-
-                                </template>
-                            </template>
-
+                            <sidebar v-for="(menu,index) in routes" :key="index" :item="menu" />
                         </el-menu>
 
 
+                        </el-scrollbar>
                     </aside>
+
                     <el-col :span="24" class="content-wrapper" :class="collapsed?'content-collapsed':'content-expanded'">
                         <div class="tags" v-if="showTags">
                             <ul>
@@ -124,8 +98,10 @@
     </div>
 </template>
 <script>
+    import Sidebar from './components/Sidebar'
     import {getUserByToken} from './api/api';
     export default {
+        components: { Sidebar },
         data() {
             return {
                 sysName: 'BlogAdmin',
@@ -188,11 +164,17 @@
                     window.localStorage.removeItem('Token');
                     window.localStorage.removeItem('TokenExpire');
                     window.localStorage.removeItem('NavigationBar');
-                    sessionStorage.removeItem("Tags")
+                    window.localStorage.removeItem('refreshtime');
+                    window.localStorage.removeItem('router');
+                    sessionStorage.removeItem("Tags");
+
+                    global.antRouter = [];
+
                     this.tagsList = [];
                     this.routes = [];
                     this.$store.commit("saveTagsData","");
                     _this.$router.push('/login');
+                    window.location.reload()
                 }).catch(() => {
 
                 });
@@ -228,6 +210,7 @@
             closeAll() {
                 this.tagsList = [];
                 this.$router.push('/');
+                sessionStorage.removeItem("Tags");
             },
             // 关闭其他标签
             closeOther() {
@@ -235,6 +218,9 @@
                     return item.path === this.$route.fullPath;
                 })
                 this.tagsList = curItem;
+
+
+                sessionStorage.setItem("Tags",JSON.stringify(this.tagsList))
             },
             // 设置标签
             setTags(route) {
@@ -287,10 +273,11 @@
             }
 
 
-            var NavigationBar = JSON.parse(window.localStorage.NavigationBar? window.localStorage.NavigationBar:null);
+            var NavigationBar = JSON.parse(window.localStorage.router? window.localStorage.router:null);
+            // var NavigationBar = global.antRouter;
 
-            if (this.routes.length<=0&&NavigationBar&&NavigationBar.children.length>=0) {
-                this.routes=NavigationBar.children;
+            if (this.routes.length<=0&&NavigationBar&&NavigationBar.length>=0) {
+                this.routes=NavigationBar;
             }
 
         },
@@ -303,10 +290,11 @@
             }
 
 
-            var NavigationBar = JSON.parse(window.localStorage.NavigationBar? window.localStorage.NavigationBar:null);
-            if (NavigationBar&&NavigationBar.children.length>=0) {
-                if (this.routes.length<=0||(JSON.stringify(this.routes)!=JSON.stringify((NavigationBar.children)))) {
-                this.routes=NavigationBar.children;
+            var NavigationBar = JSON.parse(window.localStorage.router? window.localStorage.router:null);
+
+            if (NavigationBar&&NavigationBar.length>=0) {
+                if (this.routes.length<=0||(JSON.stringify(this.routes)!=JSON.stringify((NavigationBar)))) {
+                this.routes=NavigationBar;
                 }
             }
 

@@ -2,7 +2,7 @@
     <section>
         <!--工具条-->
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
-            <el-form :inline="true" :model="filters">
+            <el-form :inline="true" :model="filters" @submit.native.prevent>
                 <el-form-item>
                     <el-input v-model="filters.Name" placeholder="菜单/按钮名"></el-input>
                 </el-form-item>
@@ -78,7 +78,9 @@
                     <el-input v-model="editForm.Name" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="路由地址" prop="Code">
-                    <el-input v-model="editForm.Code" auto-complete="off"></el-input>
+                    <el-tooltip class="item" effect="dark" content="如果是导航条且无路由，请填‘-’字符，如果是按钮，请输入空格即可" placement="top-start">
+                        <el-input v-model="editForm.Code" auto-complete="off"></el-input>
+                    </el-tooltip>
                 </el-form-item>
                 <el-form-item label="描述" prop="Description">
                     <el-input v-model="editForm.Description" auto-complete="off"></el-input>
@@ -132,7 +134,9 @@
                     <el-input v-model="addForm.Name" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="路由地址" prop="Code">
+                    <el-tooltip class="item" effect="dark" content="如果是导航条且无路由，请填‘-’字符，如果是按钮，请输入空格即可" placement="top-start">
                     <el-input v-model="addForm.Code" auto-complete="off"></el-input>
+                    </el-tooltip>
                 </el-form-item>
                 <el-form-item label="描述" prop="Description">
                     <el-input v-model="addForm.Description" auto-complete="off"></el-input>

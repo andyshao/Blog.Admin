@@ -1,9 +1,13 @@
 import axios from 'axios';
-import router from '../router'
+// import router from '../routerManuaConfig'
+import router from '../router/index'
 import store from "../store";
 import Vue from 'vue';
 
 let base = '';
+
+// 请求延时
+axios.defaults.timeout = 10000
 
 var storeTemp = store;
 axios.interceptors.request.use(
@@ -15,6 +19,9 @@ axios.interceptors.request.use(
             // 判断是否存在token，如果存在的话，则每个http header都加上token
             config.headers.Authorization = "Bearer " + storeTemp.state.token;
         }
+
+        saveRefreshtime();
+
         return config;
     },
     err => {
@@ -28,34 +35,59 @@ axios.interceptors.response.use(
         return response;
     },
     error => {
+        // 超时请求处理
+        var originalRequest = error.config;
+        if(error.code == 'ECONNABORTED' && error.message.indexOf('timeout')!=-1 && !originalRequest._retry){
+
+            Vue.prototype.$message({
+                message: '请求超时！',
+                type: 'error'
+            });
+
+            originalRequest._retry = true
+            return null;
+        }
 
         if (error.response) {
+            if (error.response.status == 401) {
+                var curTime = new Date()
+                var refreshtime = new Date(Date.parse(window.localStorage.refreshtime))
+                // 在用户操作的活跃期内
+                if (window.localStorage.refreshtime && (curTime <= refreshtime)) {
+                    return  refreshToken({token: window.localStorage.Token}).then((res) => {
+                        if (res.success) {
+                            Vue.prototype.$message({
+                                message: 'refreshToken success! loading data...',
+                                type: 'success'
+                            });
 
-            switch (error.response.status) {
-                case 401:
-                    // 返回 401 清除token信息并跳转到登录页面
-                    store.commit("saveToken", "");
-                    store.commit("saveTokenExpire", "");
-                    store.commit("saveTagsData", "");
-                    window.localStorage.removeItem('user');
-                    window.localStorage.removeItem('NavigationBar');
+                            store.commit("saveToken", res.token);
 
+                            var curTime = new Date();
+                            var expiredate = new Date(curTime.setSeconds(curTime.getSeconds() + res.expires_in));
+                            store.commit("saveTokenExpire", expiredate);
 
-                    router.replace({
-                        path: "/login",
-                        query: {redirect: router.currentRoute.fullPath}
+                            error.config.__isRetryRequest = true;
+                            error.config.headers.Authorization = 'Bearer ' + res.token;
+                            return axios(error.config);
+                        } else {
+                            // 刷新token失败 清除token信息并跳转到登录页面
+                            ToLogin()
+                        }
                     });
-                case 403:
-                    Vue.prototype.$message({
-                        message: '失败！该操作无权限',
-                        type: 'error'
-                    });
-                    // 返回 403 无权限
-                    // router.replace({
-                    //     path: "/403",
-                    // });
+                } else {
+                    // 返回 401，并且不知用户操作活跃期内 清除token信息并跳转到登录页面
+                    ToLogin()
+                }
 
-                    return null;
+            }
+            // 403 无权限
+            if (error.response.status == 403) {
+                Vue.prototype.$message({
+                    message: '失败！该操作无权限',
+                    type: 'error'
+                });
+                return null;
             }
         }
         return ""; // 返回接口返回的错误信息
@@ -65,6 +97,42 @@ axios.interceptors.response.use(
 // 登录
 export const requestLogin = params => {
     return axios.get(`${base}/api/login/jwttoken3.0`, {params: params}).then(res => res.data);
+};
+export const requestLoginMock = params => { return axios.post(`${base}/login`, params).then(res => res.data); };
+
+export const refreshToken = params => {
+    return axios.get(`${base}/api/login/RefreshToken`, {params: params}).then(res => res.data);
+};
+
+export const saveRefreshtime = params => {
+
+    let nowtime = new Date();
+    let lastRefreshtime = window.localStorage.refreshtime ? new Date(window.localStorage.refreshtime) : new Date(-1);
+    let expiretime = new Date(Date.parse(window.localStorage.TokenExpire))
+
+    let refreshCount=1;//滑动系数
+    if (lastRefreshtime >= nowtime) {
+        lastRefreshtime=nowtime>expiretime ? nowtime:expiretime;
+        lastRefreshtime.setMinutes(lastRefreshtime.getMinutes() + refreshCount);
+        window.localStorage.refreshtime = lastRefreshtime;
+    }else {
+        window.localStorage.refreshtime = new Date(-1);
+    }
+};
+ const ToLogin = params => {
+     store.commit("saveToken", "");
+     store.commit("saveTokenExpire", "");
+     store.commit("saveTagsData", "");
+     window.localStorage.removeItem('user');
+     window.localStorage.removeItem('NavigationBar');
+
+     router.replace({
+         path: "/login",
+         query: {redirect: router.currentRoute.fullPath}
+     });
+
+      window.location.reload()
+
 };
 
 export const getUserByToken = params => {
@@ -94,7 +162,7 @@ export const addUser = params => {
     return axios.post(`${base}/api/user/post`, params);
 };
 export const batchRemoveUser = params => {
-    return axios.get(`${base}/user/batchremove`, {params: params});
+    // return axios.get(`${base}/user/batchremove`, {params: params});//没做
 };
 
 // 角色管理
@@ -171,4 +239,12 @@ export const addBug = params => {
 // 博客模块管理
 export const getBlogListPage = params => {
     return axios.get(`${base}/api/Blog`, {params: params});
+};
+export const removeBlog = params => {
+    return axios.delete(`${base}/api/Blog/delete`, {params: params});
+};
+
+// 日志
+export const getLogs = params => {
+    return axios.get(`${base}/api/Monitor/get`, {params: params});
 };

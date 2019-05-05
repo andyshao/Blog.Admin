@@ -22,6 +22,10 @@ import Blogs from './views/Blog/Blogs.vue'
 import Bugs from './views/Tibug/Bugs.vue'
 
 import Thanks from './views/Thanks'
+import {saveRefreshtime} from "./api/api";
+import NoPage from "./views/404";
+import TestOne from "./views/TestShow/TestOne";
+
 
 
 Vue.use(Router)
@@ -31,6 +35,15 @@ const router = new Router({
     mode: 'history',
     base: process.env.BASE_URL,
     routes: [
+        {
+            path: '/404', component: NoPage, name: 'NoPage',
+            meta: {
+                title: 'NoPage',
+                requireAuth: false,
+                NoNeedHome: true // 添加该字段，表示不需要home模板
+            },
+            hidden: true
+        },
         {
             path: '/403', component: NotFound, name: 'NotFound',
             meta: {
@@ -167,47 +180,26 @@ const router = new Router({
             }
         },
         {
+            path: '/',
+            component: Layout,
+            name: '测试管理',
+            iconCls: 'fa-line-chart ',//图标样式class
+            children: [
+                {
+                    path: '/TestShow/TestOne', component: TestOne, name: '测试页1',
+                    meta: {
+                        title: '测试页1',
+                        requireAuth: true
+                    }
+                },
+            ]
+        },
+        {
             path: '*',
             hidden: true,
             redirect: {path: '/404'}
         }
     ]
 })
-
-var storeTemp = store;
-router.beforeEach((to, from, next) => {
-
-    if (!storeTemp.state.token) {
-        storeTemp.commit("saveToken", window.localStorage.Token)
-    }
-    if (!storeTemp.state.tokenExpire) {
-        storeTemp.commit("saveTokenExpire", window.localStorage.TokenExpire)
-    }
-    if (to.meta.requireAuth) {
-        // 判断该路由是否需要登录权限
-        var curTime = new Date()
-        var expiretime = new Date(Date.parse(window.localStorage.TokenExpire))
-
-        if (storeTemp.state.token && storeTemp.state.token != "undefined" && (curTime < expiretime && window.localStorage.TokenExpire)) {
-
-            // 通过vuex state获取当前的token是否存在
-            next();
-        } else {
-
-            store.commit("saveToken", "");
-            store.commit("saveTokenExpire", "");
-            store.commit("saveTagsData", "");
-            window.localStorage.removeItem('user');
-            window.localStorage.removeItem('NavigationBar');
-
-            next({
-                path: "/login",
-                query: {redirect: to.fullPath} // 将跳转的路由path作为参数，登录成功后跳转到该路由
-            });
-        }
-    } else {
-        next();
-    }
-});
 
 export default router;
