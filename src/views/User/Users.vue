@@ -4,7 +4,7 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters" @submit.native.prevent>
                 <el-form-item>
-                    <el-input v-model="filters.name" placeholder="姓名"></el-input>
+                    <el-input v-model="filters.name" placeholder="昵称/登录名"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="getUsers">查询</el-button>
@@ -35,6 +35,12 @@
             <el-table-column prop="birth" label="生日" :formatter="formatBirth" width="" sortable>
             </el-table-column>
             <el-table-column prop="uStatus" label="状态" width="" sortable>
+                <template slot-scope="scope">
+                    <el-tag
+                            :type="scope.row.uStatus == 0  ? 'success' : 'danger'"
+                            disable-transitions>{{scope.row.uStatus == 0 ? "正常":"禁用"}}
+                    </el-tag>
+                </template>
             </el-table-column>
             <el-table-column label="操作" width="150">
                 <template scope="scope">
@@ -61,8 +67,8 @@
                 <el-form-item label="登录名" prop="uLoginName">
                     <el-input v-model="editForm.uLoginName" auto-complete="off"></el-input>
                 </el-form-item>
-                <!--<el-form-item label="姓名" prop="name">-->
-                    <!--<el-input v-model="editForm.name" auto-complete="off"></el-input>-->
+                <!--<el-form-item label="密码" prop="uLoginPWD">-->
+                    <!--<el-input v-model="editForm.uLoginPWD" show-password  auto-complete="off"></el-input>-->
                 <!--</el-form-item>-->
 
                 <el-form-item label="角色" prop="RID">
@@ -104,7 +110,7 @@
                     <el-input v-model="addForm.uLoginName" auto-complete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="密码" prop="uLoginPWD">
-                    <el-input v-model="addForm.uLoginPWD" auto-complete="off"></el-input>
+                    <el-input v-model="addForm.uLoginPWD" show-password  auto-complete="off"></el-input>
                 </el-form-item>
                 <!--<el-form-item label="姓名" prop="name">-->
                     <!--<el-input v-model="addForm.name" auto-complete="off"></el-input>-->
@@ -382,27 +388,25 @@
             },
             //批量删除
             batchRemove: function () {
-                this.$message({
-                    message: '该功能未开放',
-                    type: 'warning'
-                });
-                return;
 
-                var ids = this.sels.map(item => item.id).toString();
+                // return;
+
+                var ids = this.sels.map(item => item.uID).toString();
                 this.$confirm('确认删除选中记录吗？', '提示', {
                     type: 'warning'
                 }).then(() => {
                     this.listLoading = true;
                     //NProgress.start();
                     let para = {ids: ids};
+
                     batchRemoveUser(para).then((res) => {
                         this.listLoading = false;
                         //NProgress.done();
                         this.$message({
-                            message: '删除成功',
-                            type: 'success'
+                            message: '该功能未开放',
+                            type: 'warning'
                         });
-                        this.getUsers();
+                        console.log(res)
                     });
                 }).catch(() => {
 

@@ -1,7 +1,8 @@
 <template>
     <section>
         <div style="display: none1">
-            <el-form ref="form"  label-width="80px" @submit.prevent="onSubmit" style="margin:20px;width:60%;min-width:600px;">
+            <el-form ref="form" label-width="80px" @submit.prevent="onSubmit"
+                     style="margin:20px;width:60%;min-width:600px;">
                 <el-form-item label="用户名">
                     <el-input v-model="userName"></el-input>
                 </el-form-item>
@@ -72,7 +73,7 @@
                 userMessage: "123",
                 connection: "",
                 messages: [],
-                t:""
+                t: ""
 
             }
         },
@@ -90,17 +91,26 @@
             },
             //获取用户列表
             getRoles() {
+                let thisvue=this;
                 let para = {
                     page: this.page,
                     key: this.filters.LinkUrl
                 };
                 this.listLoading = true;
 
-                //NProgress.start();
                 getLogs(para).then((res) => {
-                    this.tableData = res.data.response;
-                    this.listLoading = false;
-                    //NProgress.done();
+                    // this.tableData = res.data.response;
+                    thisvue.connection.start().then(() => {
+
+                        thisvue.connection.invoke('GetLatestCount', 1).catch(function (err) {
+                            return console.error(err);
+                        });
+
+                        // transactionConnection.invoke('JoinGroup', 'ClientAccountTransaction').catch(err => console.error(err.toString()));
+
+                    });
+
+
                 });
             },
             submitCard: function () {
@@ -109,27 +119,26 @@
                         return console.error(err);
                     });
 
-                    this.listLoading = false;
                 }
             },
             getLogs: function () {
+                this.listLoading = true;
                 this.connection.invoke('GetLatestCount', 1).catch(function (err) {
                     return console.error(err);
                 });
 
-                this.listLoading = false
             }
 
         },
         created: function () {
-            this.connection = new signalR.HubConnectionBuilder()
-                .withUrl('/api/chatHub')
+            let thisVue = this;
+
+            thisVue.connection = new signalR.HubConnectionBuilder()
+                .withUrl('/api2/chatHub')
                 .configureLogging(signalR.LogLevel.Information)
                 .build();
 
 
-            var thisVue = this;
-            thisVue.connection.start();
 
             thisVue.connection.on('ReceiveMessage', function (user, message) {
                 thisVue.messages.push({user, message});
@@ -137,18 +146,17 @@
 
             thisVue.connection.on('ReceiveUpdate', function (update) {
                 console.info('update success!')
+                thisVue.listLoading = false;
                 thisVue.tableData = update;
                 window.clearInterval(this.t)
             })
-
         },
         mounted() {
-            // this.getRoles();
-            this.t =  setTimeout(() => {
-                this.getLogs();
-           }, 1000);
+            this.getRoles();
 
-
+            //  this.t =  setTimeout(() => {
+            //      this.getLogs();
+            // }, 1000);
 
         },
         beforeDestroy() {

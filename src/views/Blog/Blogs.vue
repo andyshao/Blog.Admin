@@ -4,7 +4,7 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters" @submit.native.prevent>
                 <el-form-item>
-                    <el-input v-model="filters.LinkUrl" placeholder="接口名"></el-input>
+                    <el-input v-model="filters.LinkUrl" placeholder="标题/内容"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="getRoles">查询</el-button>
@@ -24,9 +24,9 @@
             </el-table-column>
             <el-table-column prop="bID" label="ID" width="100" sortable>
             </el-table-column>
-            <el-table-column prop="btitle" label="标题" width="300" sortable>
+            <el-table-column prop="btitle" label="标题" width="" sortable>
             </el-table-column>
-            <el-table-column prop="bcontent" label="内容"   width="" sortable>
+            <el-table-column prop="bcontent" label="内容"   width="400" sortable>
                 <template slot-scope="scope">
 
 <span v-html="scope.row.bcontent.substring(0,100)"></span>
@@ -223,11 +223,14 @@
             handleEdit: function (index, row) {
                 // this.editFormVisible = true;
                 // this.editForm = Object.assign({}, row);
+                console.log(row.bID)
+                this.$router.replace(`/Blog/Detail?id=${row.bID}`);
 
-                this.$message({
-                    message: "功能正在陆续开发中...",
-                    type: 'error'
-                });
+
+                // this.$message({
+                //     message: "功能正在陆续开发中...",
+                //     type: 'error'
+                // });
 
             },
             //显示新增界面
